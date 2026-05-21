@@ -6,9 +6,12 @@ import connectDB from "./configs/db.js";
 import { inngest, functions } from "./inngest/index.js";
 import { clerkMiddleware } from "@clerk/express";
 import userRouter from "./routes/userRoutes.js";
+<<<<<<< HEAD
 import postRouter from "./routes/postRoutes.js";
 import storyRouter from "./routes/storyRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
+=======
+>>>>>>> eb09b8edbc0eefaf5c6a2b3058c2cd2c44951bd0
 
 const app = express();
 app.use(express.json());
@@ -17,9 +20,13 @@ app.use(clerkMiddleware());
 app.get("/", (req, res) => res.send("Server is running"));
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/user", userRouter);
+<<<<<<< HEAD
 app.use("/api/post", postRouter);
 app.use("/api/story", storyRouter);
 app.use("/api/message", messageRouter);
+=======
+
+>>>>>>> eb09b8edbc0eefaf5c6a2b3058c2cd2c44951bd0
 let _dbConnected = false;
 async function ensureDbConnection() {
   if (_dbConnected) return;
