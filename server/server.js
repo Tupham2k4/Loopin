@@ -6,12 +6,9 @@ import connectDB from "./configs/db.js";
 import { inngest, functions } from "./inngest/index.js";
 import { clerkMiddleware } from "@clerk/express";
 import userRouter from "./routes/userRoutes.js";
-<<<<<<< HEAD
 import postRouter from "./routes/postRoutes.js";
 import storyRouter from "./routes/storyRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
-=======
->>>>>>> eb09b8edbc0eefaf5c6a2b3058c2cd2c44951bd0
 
 const app = express();
 app.use(express.json());
