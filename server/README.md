@@ -42,9 +42,7 @@ Tất cả biến cấu hình đặt trong file `.env` theo hướng dẫn ở p
 cd server
 npm install
 # dev
-npm run dev
-# prod
-npm start
+npm run serer
 ```
 
 ---
