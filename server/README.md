@@ -9,77 +9,116 @@ Server API cho Loopin, sử dụng Node.js + Express và MongoDB. Chịu trách 
 - Nhắn tin thời gian thực: SSE endpoint `/api/message/:userId`.
 - Các workflow tự động (Inngest): đồng bộ user từ Clerk, gửi email reminder, xóa story sau 24h, v.v.
 
-## Yêu cầu
+# Loopin — Server (Backend)
 
-- Node.js 18+
-- MongoDB URI (Atlas hoặc local)
+Server của Loopin chịu trách nhiệm cung cấp REST API, xử lý upload media, quản lý dữ liệu người dùng và thông tin nhắn, đồng thời chạy các workflow nền (Inngest) như gửi email nhắc và xóa story.
 
-## Biến môi trường quan trọng
+---
 
-- `MONGODB_URI` — kết nối MongoDB.
-- `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT` — nếu dùng ImageKit.
-- `NODEMAILER_*` — thông tin SMTP để gửi mail (nếu sử dụng).
-- `FRONTEND_URL` — URL frontend (dùng trong email template).
-- `VERCEL` — biến môi trường để chuyển sang chế độ serverless nếu cần.
+## Tính năng chính
 
-## Cài đặt & chạy (development)
+- REST API cho user, post, story, message.
+- Upload: Multer xử lý multipart, ảnh được upload/host qua ImageKit.
+- Nhắn tin thời gian thực: SSE endpoint `/api/message/:userId`.
+- Workflows: Inngest functions cho cron / email / delayed jobs.
+
+---
+
+## Yêu cầu & biến môi trường
+
+- Node.js >= 18
+- MongoDB connection URI (`MONGODB_URI`)
+- ImageKit: `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`
+- Email (Nodemailer): `EMAIL_USER`, `EMAIL_PASS`
+- `FRONTEND_URL` — frontend base URL dùng trong email templates
+
+Tất cả biến cấu hình đặt trong file `.env` theo hướng dẫn ở phần cài đặt.
+
+---
+
+## Cài đặt & chạy
 
 ```bash
 cd server
 npm install
-# development
+# dev
 npm run dev
-# hoặc production
+# prod
 npm start
 ```
 
-## Endpoints chính (tổng quan)
+---
 
-> tất cả tiền tố đều bắt đầu với `/api`
+## API chính (tổng quan)
 
-### User (`/api/user`)
+Tiền tố: `/api`
+
+### User
 
 - `GET /api/user/data` — (protected) lấy dữ liệu user hiện tại.
-- `POST /api/user/update` — (protected, multipart) cập nhật profile (profile/cover image).
-- `POST /api/user/discover` — (protected) tìm người dùng theo input.
-- `POST /api/user/follow` — (protected) follow user.
-- `POST /api/user/unfollow` — (protected) unfollow user.
-- `POST /api/user/connect` — (protected) gửi yêu cầu kết nối.
-- `POST /api/user/accept` — (protected) chấp nhận kết nối.
-- `GET /api/user/connections` — (protected) lấy danh sách connections / followers / following / pending.
-- `POST /api/user/profiles` — lấy profile public (không protected).
-- `GET /api/user/recent-messages` — (protected) recent messages list.
+- `POST /api/user/update` — (protected) cập nhật profile (multipart).
+- `POST /api/user/discover` — tìm người theo input.
+- `POST /api/user/follow` — follow user.
+- `POST /api/user/unfollow` — unfollow user.
+- `POST /api/user/connect` — gửi yêu cầu kết nối.
+- `POST /api/user/accept` — chấp nhận kết nối.
+- `GET /api/user/connections` — lấy connections/followers/following/pending.
 
-### Post (`/api/post`)
+### Post
 
-- `POST /api/post/add` — (protected, multipart) tạo post (upload images).
-- `GET /api/post/feed` — (protected) lấy feed.
-- `POST /api/post/like` — (protected) like post.
+- `POST /api/post/add` — tạo post (multipart).
+- `GET /api/post/feed` — lấy feed.
+- `POST /api/post/like` — like post.
 
-### Story (`/api/story`)
+### Story
 
-- `POST /api/story/create` — (protected, multipart) tạo story (upload media).
-- `GET /api/story/get` — (protected) lấy stories của user + connections.
+- `POST /api/story/create` — tạo story (multipart).
+- `GET /api/story/get` — lấy stories.
 
-### Message (`/api/message`)
+### Message
 
-- `GET /api/message/:userId` — SSE endpoint để client lắng nghe tin nhắn đến cho `userId`.
-- `POST /api/message/send` — (protected, multipart) gửi tin nhắn (text hoặc image).
-- `POST /api/message/get` — (protected) lấy lịch sử chat 1-1 với `to_user_id` trong body.
+- `GET /api/message/:userId` — SSE endpoint cho userId (EventSource).
+- `POST /api/message/send` — gửi tin nhắn (multipart).
+- `POST /api/message/get` — lấy lịch sử chat 1-1.
 
-## Database (models chính)
+---
 
-- `User` — người dùng (profile, followers, following, connections).
-- `Post` — bài đăng, ảnh, likes.
-- `Story` — story tạm thời.
-- `Message` — lưu tin nhắn 1-1 (text, image, seen flag).
-- `Connection` — trạng thái kết nối giữa người dùng.
+## Database models (chính)
 
-## Inngest workflows
+- `User` — profile, followers, following, connections.
+- `Post` — nội dung bài đăng, ảnh, likes.
+- `Story` — media tạm thời.
+- `Message` — text/image, seen flag.
+- `Connection` — trạng thái kết nối.
 
-- `sync-user-from-clerk` — sync user sau khi được tạo/updated/deleted từ Clerk.
-- `send-new-connection-request-reminder` — gửi email nhắc trong 24h nếu chưa accept.
-- `story-delete` — xóa story sau 24h.
+---
+
+## Inngest (workflows)
+
+- `sync-user-from-clerk` — đồng bộ user khi có sự kiện Clerk.
+- `send-new-connection-request-reminder` — gửi email nhắc sau 24h nếu chưa accept.
+- `story-delete` — xóa story theo lịch trình.
+
+---
+
+## Thử nghiệm nhanh (curl)
+
+Gửi message (text):
+
+```bash
+curl -X POST 'http://localhost:4000/api/message/send' \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "to_user_id=<TARGET_USER_ID>" \
+  -F "text=Xin chào"
+```
+
+Kết nối SSE từ terminal (ví dụ dùng `curl`):
+
+```bash
+curl -N http://localhost:4000/api/message/<yourUserId>
+```
+
+---
 
 ## Cấu trúc thư mục (Directory Tree)
 
@@ -103,22 +142,21 @@ server/
 └─ server.js
 ```
 
-## Ví dụ nhanh (gửi tin)
+---
 
-```bash
-curl -X POST 'http://localhost:4000/api/message/send' \
-  -H "Authorization: Bearer <TOKEN>" \
-  -F "to_user_id=<TARGET_USER_ID>" \
-  -F "text=Xin chào"
-```
+## Roadmap / Các chức năng chưa hoàn thiện
 
-## SSE test
+- Admin panel & RBAC (role-based access control).
+- Comments & sharing features for posts.
+- Push notifications (APNs/FCM) cho mobile apps.
+- Rate limiting, validation & security hardening.
 
-- Kết nối SSE từ client: `new EventSource('<BASEURL>/api/message/<yourId>')` và lắng nghe `onmessage`.
+---
 
-## Các công việc tiếp theo / limitations
+Nếu bạn muốn, tôi có thể mở rộng phần API reference bằng ví dụ request/response chi tiết cho từng endpoint hoặc viết hướng dẫn deploy server lên Vercel/Render.
 
-- Thiết lập rate-limiting / validation nâng cao cho API.
+© Loopin — Backend docs
+
 - Admin panel + role-based access control.
 - Hệ thống comments & chia sẻ (share) cho post.
 - Notifications push (APNs / FCM) nếu cần mobile push.

@@ -1,5 +1,78 @@
 # Loopin — Client (Frontend)
 
+Ứng dụng frontend của Loopin, xây dựng bằng React + Vite. Phục vụ phần giao diện: feed, profile, chat, stories và notifications.
+
+---
+
+## Tính năng chính
+
+- Trang Feed: hiển thị bài đăng, ảnh, like.
+- Profile: chỉnh sửa avatar, cover, bio.
+- Connections: follow, pending, accept/reject.
+- Chat 1-1: gửi text & ảnh, SSE để nhận message thời gian thực.
+- Notifications: custom toast (react-hot-toast) với component `Notification`.
+
+---
+
+## Yêu cầu & biến môi trường
+
+- Node.js >= 18
+- `VITE_BASEURL` — URL backend (ví dụ `http://localhost:4000`)
+- Clerk config (nếu dùng Clerk cho auth)
+
+---
+
+## Cài đặt & chạy (development)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Build production
+
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## Cấu trúc thư mục (Directory Tree)
+
+```
+client/
+├─ public/
+├─ src/
+│  ├─ api/axios.js           # axios instance, baseURL
+│  ├─ app/store.js           # Redux store
+│  ├─ assets/                # static/dummy data
+│  ├─ components/            # UI components (ChatBox, Notification...)
+│  ├─ features/              # Redux slices (user, messages,...)
+│  └─ pages/                 # Views (Feed, ChatBox, Connections...)
+├─ package.json
+└─ vite.config.js
+```
+
+---
+
+## SSE & Notifications (chi tiết)
+
+- Client kết nối SSE: `new EventSource(`${VITE_BASEURL}/api/message/${user.id}`)` và lắng nghe `onmessage`.
+- Khi nhận message mới: nếu đang ở trang chat với người gửi → dispatch thêm message; nếu không → hiển thị custom toast `Notification`.
+
+## Debugging nhanh
+
+- Kiểm tra DevTools → Network → lọc `EventStream` để thấy kết nối SSE.
+- Kiểm tra console log cho lỗi parse hoặc lỗi kết nối.
+
+---
+
+Nếu muốn mình có thể thêm hướng dẫn deploy cho frontend (Vercel) hoặc chỉnh animation cho notification.
+
+# Loopin — Client (Frontend)
+
 Đây là ứng dụng frontend của Loopin, xây dựng bằng React + Vite. Giao diện tập trung vào trải nghiệm nhắn tin và feed.
 
 ## Tính năng chính (client)
