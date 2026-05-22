@@ -58,7 +58,7 @@ export const updateUserData = async (req, res) => {
     const profile = req.files.profile && req.files.profile[0];
     const cover = req.files.cover && req.files.cover[0];
     if (profile) {
-      const response = await imagekit.files.upload({
+      const response = await imagekit.upload({
         file: fs.createReadStream(profile.path),
         fileName: profile.originalname,
       });
@@ -80,7 +80,7 @@ export const updateUserData = async (req, res) => {
       updatedData.profile_picture = url;
     }
     if (cover) {
-      const response = await imagekit.files.upload({
+      const response = await imagekit.upload({
         file: fs.createReadStream(cover.path),
         fileName: cover.originalname,
       });
@@ -191,8 +191,8 @@ export const sendConnectionRequest = async (req, res) => {
     // Check if users are already connected
     const connection = await Connection.findOne({
       $or: [
-        { rom_user_id: userId, to_user_id: id },
-        { rom_user_id: id, to_user_id: userId },
+        { from_user_id: userId, to_user_id: id },
+        { from_user_id: id, to_user_id: userId },
       ],
     });
     if (!connection) {

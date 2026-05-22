@@ -1,9 +1,13 @@
 import React, { useState } from "react";
-import { dummyUserData } from "../assets/assets";
 import { Pencil } from "lucide-react";
-
+import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "@clerk/clerk-react";
+import { updateUser } from "../features/user/userSlice";
+import toast from "react-hot-toast";
 const ProfileModal = ({ setShowEdit }) => {
-  const user = dummyUserData;
+  const dispatch = useDispatch();
+  const { getToken } = useAuth();
+  const user = useSelector((state) => state.user.value);
   const [editForm, setEditForm] = useState({
     username: user.username,
     bio: user.bio,
@@ -14,6 +18,28 @@ const ProfileModal = ({ setShowEdit }) => {
   });
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    try {
+      const userData = new FormData();
+      const {
+        full_name,
+        username,
+        bio,
+        location,
+        profile_picture,
+        cover_photo,
+      } = editForm;
+      userData.append("username", username);
+      userData.append("bio", bio);
+      userData.append("location", location);
+      userData.append("full_name", full_name);
+      profile_picture && userData.append("profile", profile_picture);
+      cover_photo && userData.append("cover", cover_photo);
+      const token = await getToken();
+      dispatch(updateUser({ userData, token }));
+      setShowEdit(false);
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -23,7 +49,12 @@ const ProfileModal = ({ setShowEdit }) => {
           <h1 className="text-2xl font-bold text-gray-900 mb-6">
             Edit Profile
           </h1>
-          <form className="space-y-4" onSubmit={handleSaveProfile}>
+          <form
+            className="space-y-4"
+            onSubmit={(e) =>
+              toast.promise(handleSaveProfile(e), { loading: "Saving..." })
+            }
+          >
             {/*Profile Picture*/}
             <div className="flex flex-col items-start gap-3">
               <label

@@ -1,16 +1,80 @@
-# React + Vite
+# Loopin — Client (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Đây là ứng dụng frontend của Loopin, xây dựng bằng React + Vite. Giao diện tập trung vào trải nghiệm nhắn tin và feed.
 
-Currently, two official plugins are available:
+## Tính năng chính (client)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Giao diện feed, profile, stories.
+- Danh sách kết nối, chấp nhận/huỷ kết nối.
+- Chat 1-1 với gửi ảnh và text.
+- SSE listener để nhận thông báo tin nhắn thời gian thực và hiển thị toast notification.
 
-## React Compiler
+## Yêu cầu
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 18+ (hoặc phiên bản tương thích).
 
-## Expanding the ESLint configuration
+## Biến môi trường quan trọng
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `VITE_BASEURL` — URL backend (ví dụ `http://localhost:4000`).
+- Các biến Clerk (được cấu hình theo hướng dẫn Clerk) nếu cần đăng nhập cục bộ.
+
+## Cài đặt & chạy (development)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Mặc định Vite sẽ mở ở `http://localhost:5173` (hoặc cổng khác do Vite chọn).
+
+## Build production
+
+```bash
+npm run build
+npm run preview
+```
+
+## Cấu trúc thư mục (chỉ mục chính)
+
+- `src/` — mã nguồn chính
+  - `api/axios.js` — instance axios dùng `VITE_BASEURL`
+  - `app/store.js` — Redux store
+  - `components/` — các component UI (ChatBox, Notification, PostCard...)
+  - `pages/` — các trang (Feed, ChatBox, Connections...)
+  - `features/` — slices Redux (user, messages, connections)
+
+### Directory Tree
+
+```
+client/
+├─ public/
+├─ src/
+│  ├─ api/axios.js
+│  ├─ app/store.js
+│  ├─ assets/
+│  ├─ components/
+│  ├─ features/
+│  └─ pages/
+├─ package.json
+└─ vite.config.js
+```
+
+## SSE & Notifications
+
+- Client tạo `EventSource` tới: `VITE_BASEURL + '/api/message/' + user.id` để nhận tin nhắn thời gian thực.
+- Notifications hiển thị bằng `react-hot-toast` với custom component `Notification`.
+
+## Debugging nhanh
+
+- Kiểm tra DevTools → Network → lọc `EventStream` để thấy kết nối SSE.
+- Console sẽ log lỗi parse hoặc kết nối.
+
+## Ghi chú
+
+- Một số UI/UX vẫn có thể tinh chỉnh (padding, màu, thời lượng toast).
+- Nếu deploy ra môi trường production, cập nhật `VITE_BASEURL` tương ứng.
+
+---
+
+Nếu cần tôi có thể tối ưu style toast để giống Zalo hơn, hoặc thêm animation vào notification.
