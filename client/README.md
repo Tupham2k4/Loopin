@@ -69,8 +69,6 @@ client/
 
 ---
 
-Nếu muốn mình có thể thêm hướng dẫn deploy cho frontend (Vercel) hoặc chỉnh animation cho notification.
-
 # Loopin — Client (Frontend)
 
 Đây là ứng dụng frontend của Loopin, xây dựng bằng React + Vite. Giao diện tập trung vào trải nghiệm nhắn tin và feed.
@@ -147,7 +145,3 @@ client/
 
 - Một số UI/UX vẫn có thể tinh chỉnh (padding, màu, thời lượng toast).
 - Nếu deploy ra môi trường production, cập nhật `VITE_BASEURL` tương ứng.
-
----
-
-Nếu cần tôi có thể tối ưu style toast để giống Zalo hơn, hoặc thêm animation vào notification.
