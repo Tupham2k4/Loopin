@@ -138,14 +138,4 @@ Social-Media/
 │  ├─ package.json
 │  └─ server.js
 ```
-
----
-
-Nếu bạn muốn, tôi có thể:
-
-- Chạy kiểm thử nhanh (SSE + gửi tin) trên môi trường dev.
-- Tạo hướng dẫn deploy lên Vercel/Heroku/Render.
-
----
-
-© Loopin — repository nội bộ của dự án
+© Loopin — demo version 1.0

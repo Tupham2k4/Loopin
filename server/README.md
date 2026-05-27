@@ -42,9 +42,7 @@ Tất cả biến cấu hình đặt trong file `.env` theo hướng dẫn ở p
 cd server
 npm install
 # dev
-npm run dev
-# prod
-npm start
+npm run serer
 ```
 
 ---
@@ -153,19 +151,5 @@ server/
 
 ---
 
-Nếu bạn muốn, tôi có thể mở rộng phần API reference bằng ví dụ request/response chi tiết cho từng endpoint hoặc viết hướng dẫn deploy server lên Vercel/Render.
-
-© Loopin — Backend docs
-
-- Admin panel + role-based access control.
-- Hệ thống comments & chia sẻ (share) cho post.
-- Notifications push (APNs / FCM) nếu cần mobile push.
-
----
-
-Nếu bạn muốn, tôi sẽ:
-
-- Thêm ví dụ chi tiết cho từng endpoint (request/response mẫu).
-- Viết hướng dẫn deploy Vercel cho cả client/server (server dạng serverless handler được hỗ trợ).
 
 © Loopin — Backend docs
