@@ -19,7 +19,23 @@ const Feed = () => {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
       if (data.success) {
-        setFeeds(data.posts);
+        const posts = data.posts ?? [];
+        // Fetch comment counts for all posts and attach to each post for initial display
+        try {
+          const ids = posts.map((p) => p._id);
+          const { data: countsData } = await api.post(
+            "api/comment/counts",
+            { postIds: ids },
+            { headers: { Authorization: `Bearer ${await getToken()}` } },
+          );
+          const counts = countsData.success ? countsData.counts : {};
+          posts.forEach((p) => {
+            p.comment_count = counts[p._id] ?? p.comment_count ?? 0;
+          });
+        } catch (err) {
+          console.debug("Could not fetch comment counts:", err.message);
+        }
+        setFeeds(posts);
       } else {
         toast.error(data.message);
       }
