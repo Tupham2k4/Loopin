@@ -281,7 +281,12 @@ export const getUserProfiles = async (req, res) => {
     if (!profile) {
       return res.json({ success: false, message: "Profile not found" });
     }
-    const posts = await Post.find({ user: profileId }).populate("user");
+    const posts = await Post.find({ user: profileId })
+      .populate("user")
+      .populate({
+        path: "repost_of",
+        populate: { path: "user", model: "User" },
+      });
     res.json({ success: true, profile, posts });
   } catch (error) {
     console.log(error);

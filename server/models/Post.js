@@ -6,10 +6,17 @@ const postSchema = new mongoose.Schema(
     image_urls: [{ type: String }],
     post_type: {
       type: String,
-      enum: ["text", "image", "text_with_image"],
+      enum: ["text", "image", "text_with_image", "repost"],
       required: true,
     },
     likes_count: [{ type: String, ref: "User" }],
+    repost_of: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
+    repost_count: { type: Number, default: 0 },
+    repost_caption: { type: String, default: "" },
   },
   { timestamps: true, minimize: false },
 );
