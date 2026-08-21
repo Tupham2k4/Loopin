@@ -29,6 +29,29 @@ export const markAllRead = createAsyncThunk(
   },
 );
 
+// Mark a single notification as read on the server
+export const markNotificationAsRead = createAsyncThunk(
+  "notifications/markOneReadServer",
+  async ({ notificationId, token }, { dispatch }) => {
+    await api.post(
+      "/api/notification/read",
+      { notificationId },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    dispatch(markOneRead(notificationId));
+  },
+);
+
+// Clear all notifications on the server
+export const clearNotifications = createAsyncThunk(
+  "notifications/clear",
+  async (token) => {
+    await api.delete("/api/notification/clear", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+);
+
 const notificationsSlice = createSlice({
   name: "notifications",
   initialState,
@@ -65,6 +88,10 @@ const notificationsSlice = createSlice({
         state.notifications.forEach((n) => {
           n.is_read = true;
         });
+      })
+      .addCase(clearNotifications.fulfilled, (state) => {
+        state.notifications = [];
+        state.unreadCount = 0;
       });
   },
 });

@@ -8,6 +8,7 @@ import Connection from "./pages/Connection";
 import Discover from "./pages/Discover";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
+import Notifications from "./pages/Notifications";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import Notification from "./components/Notification";
 import Layout from "./pages/Layout";
@@ -131,6 +132,7 @@ const App = () => {
           <Route path="discover" element={<Discover />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile/:profileId" element={<Profile />} />
+          <Route path="notifications" element={<Notifications />} />
           <Route path="create-post" element={<CreatePost />} />
         </Route>
       </Routes>
