@@ -90,7 +90,6 @@ Loopin là một ứng dụng mạng xã hội nhẹ, tập trung vào kết n�
 **Các chức năng chưa hoàn thiện / roadmap**
 
 - Admin dashboard và quyền quản trị.
-- Chia sẻ post (reshare / repost) và chia sẻ qua link.
 - Notification center trên server (push notifications đa nền tảng).
 
 ---
@@ -137,4 +136,4 @@ Social-Media/
 │  ├─ package.json
 │  └─ server.js
 ```
-© Loopin — demo version 1.0
+© Loopin — demo version 1.0 - chưa final đâu nha :))
