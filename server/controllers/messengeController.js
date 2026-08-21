@@ -2,7 +2,7 @@ import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Message from "../models/Message.js";
 //create an empty object to store SS event connections
-const connections = {};
+export const connections = {};
 //Controller function for the SSE endpoint
 export const sseController = (req, res) => {
   const { userId } = req.params;
@@ -15,7 +15,7 @@ export const sseController = (req, res) => {
   //Add the client's response object to the connections object
   connections[userId] = res;
   //Send an initial event to the client
-  res.write("log: Connected to SSC stream \n\n");
+  res.write("event: ping\ndata: connected\n\n");
   //Handle client disconnection
   req.on("close", () => {
     //Remove the client's response object from the connections array
@@ -90,6 +90,7 @@ export const getChatMessages = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+//Get Recent Messages
 export const getUserRecentMessages = async (req, res) => {
   try {
     const { userId } = req.auth();

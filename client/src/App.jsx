@@ -17,50 +17,108 @@ import { fetchUser } from "./features/user/userSlice";
 import { useDispatch } from "react-redux";
 import { fetchConnections } from "./features/connections/connectionsSlice";
 import { addMessage } from "./features/messages/messagesSlice";
+import {
+  addNotification,
+  fetchNotifications,
+} from "./features/notifications/notificationsSlice";
+
 const App = () => {
   const { user } = useUser();
   const { getToken } = useAuth();
   const { pathname } = useLocation();
   const pathnameRef = useRef(pathname);
   const dispatch = useDispatch();
+
+  // Fetch user data + connections + notifications khi login
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         const token = await getToken();
         dispatch(fetchUser(token));
         dispatch(fetchConnections(token));
+        dispatch(fetchNotifications(token));
       }
     };
     fetchData();
   }, [user, getToken, dispatch]);
+
   useEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
+
+  // SSE listener — xử lý cả message lẫn notification
   useEffect(() => {
-    if (user) {
-      const eventSource = new EventSource(
-        import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
-      );
-      eventSource.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
-            dispatch(addMessage(message));
-          } else {
-            toast.custom((t) => <Notification t={t} message={message} />, {
-              position: "bottom-right",
-            });
-          }
-        } catch (e) {
-          console.error("Failed to parse SSE message", e);
+    if (!user) return;
+
+    const eventSource = new EventSource(
+      import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
+    );
+
+    // Event: message
+    eventSource.addEventListener("message", (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
+          dispatch(addMessage(message));
+        } else {
+          toast.custom((t) => <Notification t={t} message={message} />, {
+            position: "bottom-right",
+          });
         }
-      };
-      // Keep connection open; close on cleanup
-      return () => {
-        eventSource.close();
-      };
-    }
+      } catch (e) {
+        console.error("Failed to parse SSE message", e);
+      }
+    });
+
+    // Event: notification ← MỚI
+    eventSource.addEventListener("notification", (event) => {
+      try {
+        const notification = JSON.parse(event.data);
+        dispatch(addNotification(notification));
+
+        // Hiển thị toast thông báo
+        let messageText = "";
+        const actorName = notification.actor?.full_name || "Ai đó";
+        const preview = notification.preview_text || "";
+        switch (notification.type) {
+          case "like_post":
+            messageText = `${actorName} đã thích bài viết của bạn.`;
+            break;
+          case "comment_post":
+            messageText = `${actorName} đã bình luận: "${preview}".`;
+            break;
+          case "reply_comment":
+            messageText = `${actorName} đã trả lời bình luận của bạn: "${preview}".`;
+            break;
+          case "like_comment":
+            messageText = `${actorName} đã thích bình luận của bạn.`;
+            break;
+          case "follow":
+            messageText = `${actorName} đã theo dõi bạn.`;
+            break;
+          case "repost":
+            messageText = `${actorName} đã đăng lại bài viết của bạn.`;
+            break;
+          case "connection_request":
+            messageText = `${actorName} đã gửi yêu cầu kết nối.`;
+            break;
+          case "connection_accepted":
+            messageText = `${actorName} đã chấp nhận yêu cầu kết nối.`;
+            break;
+          default:
+            messageText = `${actorName} đã tương tác với bạn.`;
+        }
+        toast(messageText, { icon: "🔔", position: "bottom-right" });
+      } catch (e) {
+        console.error("Failed to parse SSE notification", e);
+      }
+    });
+
+    return () => {
+      eventSource.close();
+    };
   }, [user, dispatch]);
+
   return (
     <>
       <Toaster />
@@ -79,4 +137,5 @@ const App = () => {
     </>
   );
 };
+
 export default App;

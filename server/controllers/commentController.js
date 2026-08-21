@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import Comment from "../models/Comment.js";
 import Post from "../models/Post.js";
+import { createNotification } from "../controllers/notificationController.js";
+import { connections } from "../controllers/messengeController.js";
+import User from "../models/User.js";
 // Add Comment or Reply
 export const addComment = async (req, res) => {
   try {
@@ -17,6 +20,7 @@ export const addComment = async (req, res) => {
     //If it's a reply, check that the parent comment exists and hasn't been deleted.
     if (parentId) {
       const parent = await Comment.findById(parentId);
+      const actor = await User.findById(userId).select("full_name");
       if (!parent || parent.is_deleted) {
         return res.json({
           success: false,
@@ -36,6 +40,33 @@ export const addComment = async (req, res) => {
     });
     //Populate user info to return immediately
     const populated = await Comment.findById(comment._id).populate("user");
+    const actor = await User.findById(userId).select("full_name");
+    if (parentId) {
+      //Reply → notify parent comment author
+      const parentComment = await Comment.findById(parentId);
+      await createNotification({
+        recipient: parentComment.user.toString(),
+        actor: userId,
+        actorName: actor.full_name,
+        type: "reply_comment",
+        postId: postId,
+        commentId: comment._id,
+        previewText: content.trim(),
+        sseConnections: connections,
+      });
+    } else {
+      //Comment → notify the post author
+      await createNotification({
+        recipient: post.user.toString(),
+        actor: userId,
+        actorName: actor.full_name,
+        type: "comment_post",
+        postId: postId,
+        commentId: comment._id,
+        previewText: content.trim(),
+        sseConnections: connections,
+      });
+    }
     res.json({ success: true, comment: populated });
   } catch (error) {
     console.log(error);
@@ -50,7 +81,7 @@ export const getComments = async (req, res) => {
     const topLevelComments = await Comment.find({
       post_id: postId,
       parent_id: null,
-      is_deleted: false,
+      is_deleted: { $ne: true },
     })
       .populate("user")
       .sort({ createdAt: -1 });
@@ -58,7 +89,7 @@ export const getComments = async (req, res) => {
     const replies = await Comment.find({
       post_id: postId,
       parent_id: { $ne: null },
-      is_deleted: false,
+      is_deleted: { $ne: true },
     })
       .populate("user")
       .sort({ createdAt: -1 }); //Replies are displayed in order from oldest -> newest.
@@ -97,13 +128,24 @@ export const likeComment = async (req, res) => {
       return res.json({
         success: true,
         message: "Comment unliked",
-        liked: true,
+        liked: false,
       });
-    } else {
-      comment.likes_count.push(userId);
-      await comment.save();
-      return res.json({ success: true, message: "Comment liked", liked: true });
     }
+    comment.likes_count.push(userId);
+    await comment.save();
+
+    //Send notification to the comment author
+    const actor = await User.findById(userId).select("full_name");
+    await createNotification({
+      recipient: comment.user.toString(),
+      actor: userId,
+      actorName: actor.full_name,
+      type: "like_comment",
+      commentId: comment._id,
+      postId: comment.post_id,
+      sseConnections: connections,
+    });
+    return res.json({ success: true, message: "Comment liked", liked: true });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -119,7 +161,12 @@ export const deleteComment = async (req, res) => {
     if (!comment) {
       return res.json({ success: false, message: "Comment not found" });
     }
-
+    if (comment.user !== userId) {
+      return res.json({ success: false, message: "Not authorized" });
+    }
+    comment.is_deleted = true;
+    comment.content = "[Comment đã bị xóa]";
+    await comment.save();
     // Only the commenter can delete the comment.
     if (comment.user !== userId) {
       return res.json({
@@ -149,29 +196,25 @@ export const deleteComment = async (req, res) => {
 //Count comments on multiple posts at the same time (feed)
 export const getCommentCounts = async (req, res) => {
   try {
-    const { postIds } = req.body; // array of postId strings
-
+    const { postIds } = req.body;
     if (!Array.isArray(postIds) || postIds.length === 0) {
       return res.json({ success: true, counts: {} });
     }
-
     const counts = await Comment.aggregate([
       {
         $match: {
           post_id: {
             $in: postIds.map((id) => new mongoose.Types.ObjectId(id)),
           },
-          is_deleted: false,
+          is_deleted: { $ne: true },
         },
       },
       { $group: { _id: "$post_id", count: { $sum: 1 } } },
     ]);
-
     const countsMap = {};
     counts.forEach(({ _id, count }) => {
       countsMap[_id.toString()] = count;
     });
-
     res.json({ success: true, counts: countsMap });
   } catch (error) {
     console.log(error);
