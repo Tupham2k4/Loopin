@@ -4,6 +4,7 @@ import { protect } from "../middlewares/auth.js";
 import {
   addPost,
   checkRepostStatus,
+  deletePost,
   getFeedPosts,
   likePost,
   repostPost,
@@ -14,4 +15,6 @@ postRouter.get("/feed", protect, getFeedPosts);
 postRouter.post("/like", protect, likePost);
 postRouter.post("/repost", protect, repostPost);
 postRouter.post("/repost-status", protect, checkRepostStatus);
+postRouter.post("/delete", protect, deletePost);
 export default postRouter;
+

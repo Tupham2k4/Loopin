@@ -54,7 +54,13 @@ const Feed = () => {
         <StoriesBar />
         <div className="p-4 space-y-6">
           {feeds.map((post) => (
-            <PostCard key={post._id} post={post} />
+            <PostCard
+              key={post._id}
+              post={post}
+              onDelete={(deletedId) =>
+                setFeeds((prev) => prev.filter((p) => p._id !== deletedId))
+              }
+            />
           ))}
         </div>
       </div>

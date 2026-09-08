@@ -2,6 +2,7 @@ import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Post from "../models/Post.js";
 import User from "../models/User.js";
+import Comment from "../models/Comment.js";
 import { createNotification } from "../controllers/notificationController.js";
 import { connections } from "../controllers/messengeController.js";
 
@@ -168,3 +169,34 @@ export const checkRepostStatus = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+//Delete Post
+export const deletePost = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { postId } = req.body;
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.json({ success: false, message: "Post not found" });
+    }
+    if (post.user.toString() !== userId) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    if (post.post_type === "repost" && post.repost_of) {
+      await Post.findByIdAndUpdate(post.repost_of, {
+        $inc: { repost_count: -1 },
+      });
+    } else {
+      await Post.deleteMany({ repost_of: postId });
+    }
+
+    await Comment.deleteMany({ post_id: postId });
+    await Post.findByIdAndDelete(postId);
+
+    res.json({ success: true, message: "Post deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
