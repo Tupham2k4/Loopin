@@ -17,6 +17,13 @@ const postSchema = new mongoose.Schema(
     },
     repost_count: { type: Number, default: 0 },
     repost_caption: { type: String, default: "" },
+    is_edited: { type: Boolean, default: false },
+    edit_history: [
+      {
+        content: { type: String },
+        editedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true, minimize: false },
 );

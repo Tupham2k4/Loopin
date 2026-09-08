@@ -199,4 +199,52 @@ export const deletePost = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+//Update Post
+export const updatePost = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { postId, content } = req.body;
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.json({ success: false, message: "Post not found" });
+    }
+    if (post.user.toString() !== userId) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    const previousContent =
+      post.post_type === "repost" ? post.repost_caption : post.content;
+
+    if (previousContent !== content) {
+      post.edit_history.push({
+        content: previousContent || "",
+        editedAt: new Date(),
+      });
+      if (post.post_type === "repost") {
+        post.repost_caption = content || "";
+      } else {
+        post.content = content || "";
+      }
+      post.is_edited = true;
+      await post.save();
+    }
+
+    const updatedPost = await Post.findById(postId)
+      .populate("user")
+      .populate({
+        path: "repost_of",
+        populate: { path: "user", model: "User" },
+      });
+
+    res.json({
+      success: true,
+      message: "Post updated successfully",
+      post: updatedPost,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 

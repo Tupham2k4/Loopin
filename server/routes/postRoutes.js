@@ -8,6 +8,7 @@ import {
   getFeedPosts,
   likePost,
   repostPost,
+  updatePost,
 } from "../controllers/postController.js";
 const postRouter = express.Router();
 postRouter.post("/add", upload.array("images", 4), protect, addPost);
@@ -16,5 +17,6 @@ postRouter.post("/like", protect, likePost);
 postRouter.post("/repost", protect, repostPost);
 postRouter.post("/repost-status", protect, checkRepostStatus);
 postRouter.post("/delete", protect, deletePost);
+postRouter.post("/update", protect, updatePost);
 export default postRouter;
 
